@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/hooks/useAuth';
-import { useEffect } from 'react';
 
 const signInSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -68,10 +67,9 @@ const Auth = () => {
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </CardTitle>
           <CardDescription>
-            {isSignUp 
-              ? 'Join the E-Consultation platform' 
-              : 'Sign in to your account to continue'
-            }
+            {isSignUp
+              ? 'Join the E-Consultation platform'
+              : 'Sign in to your account to continue'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -166,8 +164,7 @@ const Auth = () => {
             >
               {isSignUp
                 ? 'Already have an account? Sign in'
-                : "Don't have an account? Sign up"
-              }
+                : "Don't have an account? Sign up"}
             </Button>
           </div>
         </CardContent>

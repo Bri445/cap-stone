@@ -1,23 +1,37 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useAuth } from '@/hooks/useAuth';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useAuth } from "@/hooks/useAuth";
 
+// Validation schemas
 const signInSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 const signUpSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  displayName: z.string().min(2, 'Display name must be at least 2 characters'),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  displayName: z.string().min(2, "Display name must be at least 2 characters"),
 });
 
 type SignInForm = z.infer<typeof signInSchema>;
@@ -28,29 +42,33 @@ const Auth = () => {
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
+  // ✅ Safe defaults for Sign In
   const signInForm = useForm<SignInForm>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
 
+  // ✅ Safe defaults for Sign Up
   const signUpForm = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      email: '',
-      password: '',
-      displayName: '',
+      email: "",
+      password: "",
+      displayName: "",
     },
   });
 
+  // Redirect logged-in user
   useEffect(() => {
     if (user) {
-      navigate('/feed');
+      navigate("/feed");
     }
   }, [user, navigate]);
 
+  // Handlers
   const onSignIn = async (data: SignInForm) => {
     await signIn(data.email, data.password);
   };
@@ -59,23 +77,33 @@ const Auth = () => {
     await signUp(data.email, data.password, data.displayName);
   };
 
+  // ✅ Reset forms when toggling
+  const toggleMode = () => {
+    setIsSignUp((prev) => !prev);
+    signInForm.reset({ email: "", password: "" });
+    signUpForm.reset({ email: "", password: "", displayName: "" });
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
+            {isSignUp ? "Create Account" : "Welcome Back"}
           </CardTitle>
           <CardDescription>
             {isSignUp
-              ? 'Join the E-Consultation platform'
-              : 'Sign in to your account to continue'}
+              ? "Join the E-Consultation platform"
+              : "Sign in to your account to continue"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {isSignUp ? (
             <Form {...signUpForm}>
-              <form onSubmit={signUpForm.handleSubmit(onSignUp)} className="space-y-4">
+              <form
+                onSubmit={signUpForm.handleSubmit(onSignUp)}
+                className="space-y-4"
+              >
                 <FormField
                   control={signUpForm.control}
                   name="displayName"
@@ -83,7 +111,10 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Display Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your display name" {...field} />
+                        <Input
+                          placeholder="Enter your display name"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -96,7 +127,11 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="Enter your email" {...field} />
+                        <Input
+                          type="email"
+                          placeholder="Enter your email"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -109,20 +144,33 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Create a password" {...field} />
+                        <Input
+                          type="password"
+                          placeholder="Create a password"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={signUpForm.formState.isSubmitting}>
-                  {signUpForm.formState.isSubmitting ? 'Creating Account...' : 'Create Account'}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={signUpForm.formState.isSubmitting}
+                >
+                  {signUpForm.formState.isSubmitting
+                    ? "Creating Account..."
+                    : "Create Account"}
                 </Button>
               </form>
             </Form>
           ) : (
             <Form {...signInForm}>
-              <form onSubmit={signInForm.handleSubmit(onSignIn)} className="space-y-4">
+              <form
+                onSubmit={signInForm.handleSubmit(onSignIn)}
+                className="space-y-4"
+              >
                 <FormField
                   control={signInForm.control}
                   name="email"
@@ -130,7 +178,11 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="Enter your email" {...field} />
+                        <Input
+                          type="email"
+                          placeholder="Enter your email"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -143,27 +195,34 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Enter your password" {...field} />
+                        <Input
+                          type="password"
+                          placeholder="Enter your password"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={signInForm.formState.isSubmitting}>
-                  {signInForm.formState.isSubmitting ? 'Signing In...' : 'Sign In'}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={signInForm.formState.isSubmitting}
+                >
+                  {signInForm.formState.isSubmitting
+                    ? "Signing In..."
+                    : "Sign In"}
                 </Button>
               </form>
             </Form>
           )}
 
+          {/* Toggle button */}
           <div className="text-center">
-            <Button
-              variant="link"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm"
-            >
+            <Button variant="link" onClick={toggleMode} className="text-sm">
               {isSignUp
-                ? 'Already have an account? Sign in'
+                ? "Already have an account? Sign in"
                 : "Don't have an account? Sign up"}
             </Button>
           </div>

@@ -7,8 +7,20 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
-import { MessageSquare, Plus, FileText, BarChart3, User, LogOut } from 'lucide-react';
+import { useRole } from '@/hooks/useRole';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { 
+  MessageSquare, 
+  Plus, 
+  FileText, 
+  BarChart3, 
+  User, 
+  LogOut, 
+  Shield,
+  Crown
+} from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,6 +28,7 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const { user, signOut } = useAuth();
+  const { profile, isConsultant, isAdmin, isApproved, canCreateConsultation } = useRole();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -26,16 +39,18 @@ const Layout = ({ children }: LayoutProps) => {
 
   const navItems = [
     { path: '/feed', label: 'Feed', icon: MessageSquare },
-    { path: '/create', label: 'Create', icon: Plus },
+    ...(canCreateConsultation ? [{ path: '/create', label: 'Create', icon: Plus }] : []),
     { path: '/my-consultations', label: 'My Consultations', icon: FileText },
+    ...(isAdmin ? [{ path: '/admin', label: 'Admin', icon: Shield }] : []),
   ];
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/feed" className="text-2xl font-bold text-primary">
-            E-Consult
+          <Link to="/feed" className="text-2xl font-bold text-primary flex items-center space-x-2">
+            <MessageSquare className="w-6 h-6" />
+            <span>E-Consult</span>
           </Link>
           
           <nav className="hidden md:flex items-center space-x-6">
@@ -47,7 +62,7 @@ const Layout = ({ children }: LayoutProps) => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors hover:scale-105 ${
                     isActive 
                       ? 'bg-primary text-primary-foreground' 
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent'
@@ -60,28 +75,55 @@ const Layout = ({ children }: LayoutProps) => {
             })}
           </nav>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="" />
-                  <AvatarFallback>
-                    {user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuItem onClick={() => navigate('/profile')}>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Sign Out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center space-x-4">
+            <ThemeToggle />
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profile?.avatar_url || ""} />
+                    <AvatarFallback>
+                      {profile?.display_name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium">{profile?.display_name || 'User'}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    {isAdmin && (
+                      <Badge variant="destructive" className="text-xs">
+                        <Crown className="w-3 h-3 mr-1" />
+                        Admin
+                      </Badge>
+                    )}
+                    {isConsultant && !isAdmin && (
+                      <Badge variant="secondary" className="text-xs">
+                        <Shield className="w-3 h-3 mr-1" />
+                        Consultant
+                      </Badge>
+                    )}
+                    {isConsultant && !isApproved && (
+                      <Badge variant="outline" className="text-xs">
+                        Pending Approval
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign Out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Mobile Navigation */}

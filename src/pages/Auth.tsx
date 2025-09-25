@@ -54,6 +54,22 @@ const Auth = () => {
     }
   }, [user, loading, navigate, location]);
 
+  // Reset forms when switching between sign in and sign up
+  useEffect(() => {
+    if (isSignUp) {
+      signUpForm.reset({
+        email: '',
+        password: '',
+        displayName: '',
+      });
+    } else {
+      signInForm.reset({
+        email: '',
+        password: '',
+      });
+    }
+  }, [isSignUp, signUpForm, signInForm]);
+
   // Show loading state if checking authentication
   if (loading) {
     return (
@@ -85,6 +101,10 @@ const Auth = () => {
     }
   };
 
+  const handleToggleMode = () => {
+    setIsSignUp(!isSignUp);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -110,7 +130,11 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Display Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your display name" {...field} />
+                        <Input 
+                          placeholder="Enter your display name" 
+                          {...field}
+                          autoComplete="name"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -123,7 +147,12 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="Enter your email" {...field} />
+                        <Input 
+                          type="email" 
+                          placeholder="Enter your email" 
+                          {...field}
+                          autoComplete="email"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -136,7 +165,12 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Create a password" {...field} />
+                        <Input 
+                          type="password" 
+                          placeholder="Create a password" 
+                          {...field}
+                          autoComplete="new-password"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -157,7 +191,12 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="Enter your email" {...field} />
+                        <Input 
+                          type="email" 
+                          placeholder="Enter your email" 
+                          {...field}
+                          autoComplete="email"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -170,7 +209,12 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Enter your password" {...field} />
+                        <Input 
+                          type="password" 
+                          placeholder="Enter your password" 
+                          {...field}
+                          autoComplete="current-password"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -186,7 +230,7 @@ const Auth = () => {
           <div className="text-center">
             <Button
               variant="link"
-              onClick={() => setIsSignUp(!isSignUp)}
+              onClick={handleToggleMode}
               className="text-sm"
             >
               {isSignUp

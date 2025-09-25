@@ -22,6 +22,7 @@ const signUpSchema = z.object({
 
 type SignInForm = z.infer<typeof signInSchema>;
 type SignUpForm = z.infer<typeof signUpSchema>;
+type AuthForm = SignInForm | SignUpForm;
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -29,20 +30,13 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const signInForm = useForm<SignInForm>({
-    resolver: zodResolver(signInSchema),
+  // Use a single form with conditional schema
+  const form = useForm<AuthForm>({
+    resolver: zodResolver(isSignUp ? signUpSchema : signInSchema),
     defaultValues: {
       email: '',
       password: '',
-    },
-  });
-
-  const signUpForm = useForm<SignUpForm>({
-    resolver: zodResolver(signUpSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-      displayName: '',
+      ...(isSignUp && { displayName: '' }),
     },
   });
 
@@ -53,22 +47,6 @@ const Auth = () => {
       navigate(from, { replace: true });
     }
   }, [user, loading, navigate, location]);
-
-  // Reset forms when switching between sign in and sign up
-  useEffect(() => {
-    if (isSignUp) {
-      signUpForm.reset({
-        email: '',
-        password: '',
-        displayName: '',
-      });
-    } else {
-      signInForm.reset({
-        email: '',
-        password: '',
-      });
-    }
-  }, [isSignUp, signUpForm, signInForm]);
 
   // Show loading state if checking authentication
   if (loading) {
@@ -103,6 +81,20 @@ const Auth = () => {
 
   const handleToggleMode = () => {
     setIsSignUp(!isSignUp);
+    // Reset form when switching modes
+    form.reset({
+      email: '',
+      password: '',
+      ...(isSignUp && { displayName: '' }),
+    });
+  };
+
+  const onSubmit = async (data: AuthForm) => {
+    if (isSignUp) {
+      await onSignUp(data as SignUpForm);
+    } else {
+      await onSignIn(data as SignInForm);
+    }
   };
 
   return (
@@ -120,11 +112,11 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {isSignUp ? (
-            <Form {...signUpForm}>
-              <form onSubmit={signUpForm.handleSubmit(onSignUp)} className="space-y-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {isSignUp && (
                 <FormField
-                  control={signUpForm.control}
+                  control={form.control}
                   name="displayName"
                   render={({ field }) => (
                     <FormItem>
@@ -140,92 +132,51 @@ const Auth = () => {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={signUpForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="email" 
-                          placeholder="Enter your email" 
-                          {...field}
-                          autoComplete="email"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={signUpForm.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Create a password" 
-                          {...field}
-                          autoComplete="new-password"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full" disabled={signUpForm.formState.isSubmitting}>
-                  {signUpForm.formState.isSubmitting ? 'Creating Account...' : 'Create Account'}
-                </Button>
-              </form>
-            </Form>
-          ) : (
-            <Form {...signInForm}>
-              <form onSubmit={signInForm.handleSubmit(onSignIn)} className="space-y-4">
-                <FormField
-                  control={signInForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="email" 
-                          placeholder="Enter your email" 
-                          {...field}
-                          autoComplete="email"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={signInForm.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Enter your password" 
-                          {...field}
-                          autoComplete="current-password"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full" disabled={signInForm.formState.isSubmitting}>
-                  {signInForm.formState.isSubmitting ? 'Signing In...' : 'Sign In'}
-                </Button>
-              </form>
-            </Form>
-          )}
+              )}
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="email" 
+                        placeholder="Enter your email" 
+                        {...field}
+                        autoComplete="email"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="password" 
+                        placeholder={isSignUp ? "Create a password" : "Enter your password"} 
+                        {...field}
+                        autoComplete={isSignUp ? "new-password" : "current-password"}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting 
+                  ? (isSignUp ? 'Creating Account...' : 'Signing In...') 
+                  : (isSignUp ? 'Create Account' : 'Sign In')
+                }
+              </Button>
+            </form>
+          </Form>
 
           <div className="text-center">
             <Button

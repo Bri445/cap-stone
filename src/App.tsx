@@ -10,10 +10,11 @@ import Feed from "./pages/Feed";
 import CreateConsultation from "./pages/CreateConsultation";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import Layout from "./components/Layout";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   
   if (loading) {
@@ -31,6 +32,32 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <Layout>{children}</Layout>;
 }
 
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  
+  useEffect(() => {
+    // If user is already logged in and tries to access auth page, redirect to feed
+    if (user && window.location.pathname === '/auth') {
+      window.location.replace('/feed');
+    }
+  }, [user]);
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  // If user is logged in and trying to access auth, redirect to feed
+  if (user) {
+    return <Navigate to="/feed" replace />;
+  }
+  
+  return <>{children}</>;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -40,9 +67,9 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
-            <Route path="/create" element={<ProtectedRoute><CreateConsultation /></ProtectedRoute>} />
+            <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+            <Route path="/feed" element={<AuthGuard><Feed /></AuthGuard>} />
+            <Route path="/create" element={<AuthGuard><CreateConsultation /></AuthGuard>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
